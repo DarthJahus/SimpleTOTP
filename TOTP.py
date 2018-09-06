@@ -8,6 +8,7 @@
 
 import time
 import hmac, hashlib, base64
+import sys
 
 
 __debug = False
@@ -81,4 +82,9 @@ def get_key(k, t0=0, ti=30, h_alg=hashlib.sha1, n=6):
 
 # Test script
 if __name__ == "__main__":
-	print(get_key("XXXX-XXXX-XXXX-XXXX"))
+	#print(get_key("XXXX-XXXX-XXXX-XXXX"))
+	_args = sys.argv
+	if len(_args) < 2:
+		print("Incorrect arguments.\nUse:\n\ttotp SICRET_KEY")
+	else:
+		print(get_key(_args[1]))
