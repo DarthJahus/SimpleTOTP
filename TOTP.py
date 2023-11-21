@@ -2,8 +2,10 @@
 # 2018-02-05 23:52
 #
 # Documentation:
-#     https://en.wikipedia.org/wiki/Time-based_One-time_Password_Algorithm
-#     HOTP (RFC 4226) https://tools.ietf.org/html/rfc4226
+#   https://en.wikipedia.org/wiki/Time-based_One-time_Password_Algorithm
+#   HOTP (RFC 4226) https://tools.ietf.org/html/rfc4226
+#
+# 2023-11-21: Updated to Python 3, after all these years.
 #
 
 import time
@@ -27,7 +29,7 @@ def int_to_bytestring(i, padding=8):
 	# It's necessary to convert the final result from bytearray to bytes
 	# because the hmac functions in python 2.6 and 3.3 don't work with
 	# bytearray
-	return bytes(bytearray(reversed(result)).rjust(padding, b'\0'))
+	return bytearray(reversed(result)).rjust(padding, b'\0')
 
 
 def key_check(key):
@@ -53,13 +55,13 @@ def get_key(k, t0=0, ti=30, h_alg=hashlib.sha1, n=6):
 		_hmac_digest = int(_hmac.hexdigest(), 16)
 		# Step 3:
 		# Take the least 4 significant bits of H and use it as an offset, O.
-		_mask = (2L**(2*2))-1
+		_mask = (2**(2*2))-1
 		_offset = (_hmac_digest >> 0) & _mask
 		if __debug: print("O = " + str(_offset))
 		# Step 4 :
 		# Take 4 bytes from H starting at O bytes MSB,
 		# discard the most significant bit and store the rest as an (unsigned) 32-bit integer, I.
-		_mask = ((2L**(8*4))-1) << ((20 - _offset - 4) * 8)
+		_mask = ((2**(8*4))-1) << ((20 - _offset - 4) * 8)
 		if __debug: print("_mask = 0x%x" % _mask)
 		_i = (_hmac_digest & _mask) >> ((20 - _offset - 4) * 8)
 		if __debug: print("_res = 0x%x" % _i)
@@ -76,15 +78,14 @@ def get_key(k, t0=0, ti=30, h_alg=hashlib.sha1, n=6):
 		if len(_token_str) < n:
 			_token_str = ('0' * (n - len(_token_str))) + _token_str
 		return {"success": True, "result": _token_str}
-	except:
-		return {"success": False, "message": "Invalid key."}
+	except Exception as e:
+		return {"success": False, "message": str(e)}
 
 
-# Test script
 if __name__ == "__main__":
-	#print(get_key("XXXX-XXXX-XXXX-XXXX"))
 	_args = sys.argv
-	if len(_args) != 2:
-		print("Incorrect arguments.\nUse:\n\ttotp SICRET_KEY")
-	else:
-		print(get_key(_args[1]))
+	try:
+		print(get_key(' '.join(_args[1:])))
+	except Exception as e:
+		print(e)
+		print("Incorrect arguments.\nUse:\n\ttotp \"SICRET_KEY\"")
