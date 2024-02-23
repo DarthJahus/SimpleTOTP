@@ -11,6 +11,7 @@
 import time
 import hmac, hashlib, base64
 import sys
+import argparse
 
 
 __debug = False
@@ -83,9 +84,33 @@ def get_key(k, t0=0, ti=30, h_alg=hashlib.sha1, n=6):
 
 
 if __name__ == "__main__":
-	_args = sys.argv
+	_parser = argparse.ArgumentParser(description='Generate a TOTP token.')
+	# Define optional arguments
+	_parser.add_argument('-i', '--init', type=int, default=0, help='The Unix time to start counting time steps (default: 0)', metavar="INITIAL_TIME")
+	_parser.add_argument('-s', '--step', type=int, default=30, help='The time step in seconds (default: 30)', metavar="TIME_STEP")
+	_parser.add_argument('-d', '--digits', type=int, default=6, help='The number of digits in the token (default: 6)', metavar="DIGITS")
+	_parser.add_argument('-a', '--alg', default='SHA1', choices=['SHA1', 'SHA256', 'SHA512'], help='The hashing algorithm (default: SHA1)', metavar="HASH_ALGORITHM")
+	_parser.add_argument('-v', '--verbose', action="store_true", help="Show debug messages")
+	# Define the secret key as a positional argument
+	_parser.add_argument('key', nargs='*', help='Secret key (spaces and dashes are tolerated)', metavar="KEY")
+	
+	_args = _parser.parse_args()
+	
+	# Convert alg to the actual hashlib algorithm
+	hash_algorithms = {
+		'SHA1': hashlib.sha1,
+		'SHA256': hashlib.sha256,
+		'SHA512': hashlib.sha512,
+	}
+	
+	__debug = _args.verbose
+	
 	try:
-		print(get_key(' '.join(_args[1:])))
+		_result = get_key(k=''.join(_args.key), t0=_args.init, ti=_args.step, h_alg=hash_algorithms[_args.alg.upper()], n=_args.digits)
+		if _result["success"]:
+			print(_result["result"])
+		else:
+			print("Error\n\t%s" % _result["message"])
 	except Exception as e:
 		print(e)
 		print("Incorrect arguments.\nUse:\n\ttotp \"SICRET_KEY\"")
