@@ -44,7 +44,8 @@ def key_check(key):
 def get_key(k, t0=0, ti=30, h_alg=hashlib.sha1, n=6):
 	try:
 		k = key_check(k)
-		# Step 1: Calculate C, number of times TI has elapsed after T0.
+		digest_size = h_alg().digest_size
+        # Step 1: Calculate C, number of times TI has elapsed after T0.
 		_c = int((time.time()-t0)/ti)
 		if __debug: print("C = %i" % _c)
 		# Step 2: Compute the HMAC hash H with C as the message and K as the key
@@ -62,9 +63,9 @@ def get_key(k, t0=0, ti=30, h_alg=hashlib.sha1, n=6):
 		# Step 4 :
 		# Take 4 bytes from H starting at O bytes MSB,
 		# discard the most significant bit and store the rest as an (unsigned) 32-bit integer, I.
-		_mask = ((2**(8*4))-1) << ((20 - _offset - 4) * 8)
+		_mask = ((2**(8*4))-1) << ((digest_size - _offset - 4) * 8)
 		if __debug: print("_mask = 0x%x" % _mask)
-		_i = (_hmac_digest & _mask) >> ((20 - _offset - 4) * 8)
+		_i = (_hmac_digest & _mask) >> ((digest_size - _offset - 4) * 8)
 		if __debug: print("_res = 0x%x" % _i)
 		_mask = 0x7fffffff
 		_i = _i & _mask
